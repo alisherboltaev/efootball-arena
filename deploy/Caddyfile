@@ -1,0 +1,17 @@
+efootballarena.uz {
+	encode gzip
+	request_body {
+		max_size 15MB
+	}
+	reverse_proxy 127.0.0.1:8000
+}
+
+# www -> asosiy domen (bitta manzil, bitta kirish sessiyasi)
+www.efootballarena.uz {
+	redir https://efootballarena.uz{uri} permanent
+}
+
+# IP manzil orqali kirganlarni domenga yo'naltirish
+:80 {
+	redir https://efootballarena.uz{uri} permanent
+}

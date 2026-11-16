@@ -1,0 +1,6 @@
+# Qator oxirlari doim LF (Linux serverda muammo bo'lmasligi uchun); .bat — Windows uchun CRLF
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.mp4 binary
