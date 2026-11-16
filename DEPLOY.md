@@ -1,108 +1,107 @@
-# efootballarena.uz — saytni internetga joylash
+# Deploying efootballarena.uz
 
-Kerak bo'ladi:
-1. **Domen**: `efootballarena.uz`
-2. **VPS server**: internetda 24/7 ishlaydigan kichik kompyuter (Ubuntu)
-3. Taxminan 30–60 daqiqa vaqt
+What you need:
+1. **A domain**: `efootballarena.uz`
+2. **A VPS**: a small Ubuntu server that runs 24/7
+3. About 30–60 minutes
 
-> Nega VPS? Sayt ma'lumotlarni `data/` papkasida saqlaydi. Bepul "hosting"larning ko'pchiligi (Render free, Vercel, Netlify)
-> diskni har safar o'chirib yuboradi va ma'lumotlar yo'qoladi. VPS'da esa hammasi saqlanib qoladi.
+> Why a VPS? The site stores its data in the `data/` folder. Most free hosting platforms (Render free tier, Vercel, Netlify)
+> wipe the disk on every deploy, so the data would be lost. On a VPS everything persists.
 
 ---
 
-## 1-qadam. Domen sotib olish (.uz)
+## Step 1. Buy the domain (.uz)
 
-1. https://cctld.uz saytida `efootballarena.uz` bo'shligini tekshiring.
-2. Shu saytdagi akkreditatsiyalangan registratorlardan biridan sotib oling (ro'yxat cctld.uz da bor).
-   `.uz` domenlarini faqat ular sotadi.
-3. Hozircha DNS sozlamalariga tegmang, 4-qadamda kerak bo'ladi.
+1. Check that `efootballarena.uz` is available on https://cctld.uz.
+2. Buy it from one of the accredited registrars listed on cctld.uz. Only they sell `.uz` domains.
+3. Leave the DNS settings alone for now; you will need them in step 5.
 
-## 2-qadam. VPS server olish
+## Step 2. Get a VPS
 
-Eng kichik tarif yetadi: **1 CPU, 1 GB RAM, 10–20 GB disk, Ubuntu 22.04 yoki 24.04**.
+The smallest plan is enough: **1 CPU, 1 GB RAM, 10–20 GB disk, Ubuntu 22.04 or 24.04**.
 
-- O'zbekistondagi hosting kompaniyalarida (O'zbekistondan tez ochiladi, so'mda to'lanadi)
-- yoki xorijda: Hetzner, DigitalOcean, Contabo va boshqalar (oyiga taxminan 4–6 $)
+- A hosting company in Uzbekistan (fast from inside the country, paid in UZS)
+- or abroad: Hetzner, DigitalOcean, Contabo and others (about $4–6 per month)
 
-Sotib olgandan keyin sizga **IP manzil** (masalan `185.10.20.30`) va **root parol** beriladi.
+After purchase you get an **IP address** (for example `185.10.20.30`) and a **root password**.
 
-## 3-qadam. Fayllarni serverga yuklash
+## Step 3. Upload the files
 
-Kompyuteringizda PowerShell oching va `Efootball chempionat` papkasining ichiga kiring. Keyin quyidagi buyruqlarni bering
-(`IP` o'rniga serveringiz IP manzilini yozing, root parolini so'raydi):
+Open PowerShell on your computer and go into the project folder. Then run the following
+(replace `IP` with your server's IP address; you will be asked for the root password):
 
 ```
 ssh root@IP "mkdir -p /opt/efootballarena"
 scp -r server.py teams.py static deploy root@IP:/opt/efootballarena/
 ```
 
-Hozirgi o'yinchilar va turnirlarni ham ko'chirmoqchi bo'lsangiz, `data` papkasini ham qo'shing:
+To move existing players and tournaments as well, upload the `data` folder too:
 
 ```
 scp -r data root@IP:/opt/efootballarena/
 ```
 
-## 4-qadam. Serverni sozlash
+## Step 4. Set up the server
 
-Serverga ulaning:
+Connect to the server:
 
 ```
 ssh root@IP
 ```
 
-Keyin quyidagi buyruqlarni ketma-ket bering:
+Then run these commands one after another:
 
 ```bash
-# kerakli dasturlar
+# required packages
 apt update && apt install -y python3 caddy
 
-# sayt uchun alohida foydalanuvchi va papka
+# a dedicated user and folder for the site
 useradd --system --home /opt/efootballarena efootball
 mkdir -p /opt/efootballarena
 chown -R efootball:efootball /opt/efootballarena
 
-# saytni xizmat sifatida yoqish (server qayta yonsa ham avtomatik ishga tushadi)
+# run the site as a service (starts automatically after a reboot)
 cp /opt/efootballarena/deploy/efootballarena.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable --now efootballarena
-systemctl status efootballarena      # "active (running)" bo'lishi kerak
+systemctl status efootballarena      # should say "active (running)"
 
-# HTTPS (Caddy SSL sertifikatni o'zi oladi)
+# HTTPS (Caddy obtains the SSL certificate by itself)
 cp /opt/efootballarena/deploy/Caddyfile /etc/caddy/Caddyfile
 systemctl restart caddy
 ```
 
-> Agar `apt install caddy` "topilmadi" desa, Caddy'ni rasmiy yo'riqnoma bo'yicha o'rnating:
+> If `apt install caddy` says the package was not found, install Caddy using the official guide:
 > https://caddyserver.com/docs/install#debian-ubuntu-raspbian
 
-## 5-qadam. Domenni serverga ulash (DNS)
+## Step 5. Point the domain to the server (DNS)
 
-Domen sotib olgan registrator panelida domeningizning DNS yozuvlariga quyidagilarni qo'shing:
+In your registrar's control panel, add these DNS records for the domain:
 
-| Turi | Nomi | Qiymati |
-|------|------|---------|
-| A    | `@`  | serveringiz IP manzili |
-| A    | `www`| serveringiz IP manzili |
+| Type | Name | Value |
+|------|------|-------|
+| A    | `@`  | your server's IP address |
+| A    | `www`| your server's IP address |
 
-DNS 10 daqiqadan bir necha soatgacha yangilanadi. Keyin **https://efootballarena.uz** ochiladi.
-Qulf belgisi (HTTPS) avtomatik paydo bo'ladi.
+DNS changes take from 10 minutes to a few hours. After that **https://efootballarena.uz** opens,
+and the padlock (HTTPS) appears automatically.
 
-## 6-qadam. Birinchi kirishdan keyin
+## Step 6. After the first sign-in
 
-1. `https://efootballarena.uz/#/admin/login` sahifasiga kiring. Login `admin`, parol esa birinchi ishga tushishda serverda yaratiladi: `journalctl -u efootballarena | grep "Asosiy admin"` buyrug'i bilan ko'ring.
-2. **Darhol** Admin panel → Sozlamalar bo'limida parolni almashtiring.
+1. Open `https://efootballarena.uz/#/admin/login`. The login is `admin`; the password is generated on the server at first launch. View it with `journalctl -u efootballarena | grep "Asosiy admin"`.
+2. Change the password **right away** under Admin panel → Settings.
 
 ---
 
-## Foydali buyruqlar (serverda)
+## Useful commands (on the server)
 
-| Nima qilish kerak | Buyruq |
+| Task | Command |
 |---|---|
-| Saytni qayta ishga tushirish | `systemctl restart efootballarena` |
-| Xatolarni ko'rish | `journalctl -u efootballarena -n 100` |
-| Yangilangan fayllarni yuklash | 3-qadamdagi `scp` (data'siz), keyin `systemctl restart efootballarena` |
-| Zaxira nusxa olish (kompyuteringizda) | `scp -r root@IP:/opt/efootballarena/data ./zaxira` |
-| Serverdagi avtomatik zaxiralar | har kuni `/root/backups/data-SANA.tar.gz`, oxirgi 14 kun saqlanadi |
+| Restart the site | `systemctl restart efootballarena` |
+| View errors | `journalctl -u efootballarena -n 100` |
+| Upload updated files | the `scp` from step 3 (without `data`), then `systemctl restart efootballarena` |
+| Download a backup (on your computer) | `scp -r root@IP:/opt/efootballarena/data ./backup` |
+| Automatic backups on the server | daily `/root/backups/data-DATE.tar.gz`, the last 14 days are kept |
 
-**Muhim:** `data/` papkasida barcha o'yinchilar, turnirlar va skrinshotlar saqlanadi. Haftada bir marta zaxira nusxa oling.
-Saytni yangilaganda `data` papkasini qayta yuklamang, aks holda serverdagi yangi ma'lumotlar eskisi bilan almashib qoladi.
+**Important:** the `data/` folder holds all players, tournaments and screenshots. Take a backup once a week.
+Never re-upload the `data` folder when updating the site, or the newer data on the server will be overwritten with the old copy.

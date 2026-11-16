@@ -1,24 +1,24 @@
-# Ma'lumotlar bazasi, o'yinchilar, parol xeshlari va yuklangan rasmlar — GitHub'ga yuklanmaydi
+# Database, players, password hashes and uploaded images — never pushed to GitHub
 data/
 
-# Python keshi
+# Python cache
 __pycache__/
 *.pyc
 
-# Katta media (reklama videosi)
+# Large media (promo video)
 reklama/*.mp4
 
-# Shaxsiy fayllar
+# Personal files
 static/img/flarnix logo.png
 
-# Maxfiy fayllar va kalitlar
+# Secrets and keys
 *.env
 .env*
 *.pem
 *.key
 id_*
 
-# Tizim fayllari
+# OS files
 .DS_Store
 Thumbs.db
 desktop.ini
